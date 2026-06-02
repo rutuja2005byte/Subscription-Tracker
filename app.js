@@ -1,1 +1,13 @@
-console.log("server running local running on 5000");
+import express from 'express';
+
+const app = express();
+
+app.get('/',(req,res) => {
+    res.send('Welcome to the subscription Tracker API!');
+});
+
+app.listen(3000, () => {
+    console.log('Subscription Tracker API is running http://localhost:3000');
+})
+
+export default app;
