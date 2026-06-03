@@ -33,7 +33,7 @@ export const signUp = async (req, res, next) => {
         session.endSession();
 
         res.status(201).json({
-            sucess: true,
+            success: true,
             message: 'User created successfully',
             data: {
                 token,
