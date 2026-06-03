@@ -41,7 +41,7 @@ export const signUp = async (req, res, next) => {
             }
         });
     } catch (error) {
-        await session.commitTransaction();
+        await session.abortTransaction();
         session.endSession();
         next(error);
     }
