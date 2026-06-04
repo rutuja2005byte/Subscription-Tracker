@@ -18,6 +18,14 @@ export const sendReminders = serve( async(context) => {
         console.log(`Renewal data has passed for subscription ${subscriptionId}. Stopping workflow. `);
         return;
     }
+
+    for (const daysBefore of REMINDERS) {
+        const reminderDate = renewalDate.subtract(daysBefore, 'day');
+    }
+
+        if(reminderDate.isAfter(dayjs())) {
+
+        }
 });
 
 const fetchSubscription = async (context, subscriptionId) => {
@@ -25,3 +33,5 @@ const fetchSubscription = async (context, subscriptionId) => {
         return Subscription.findById(subscriptionId).populate('user', 'name email');
     })
 }
+
+const sleepUntilReminder = async
