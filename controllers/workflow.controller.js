@@ -10,7 +10,7 @@ export const sendReminders = serve( async(context) => {
     const { subscriptionId } = context.requestPayload;
     const subscription = await fetchSubscription(context, subscriptionId);
 
-    if(!subscription || subscription.status !== active) return;
+    if(!subscription || subscription.status !== 'active') return;
 
     const renewalDate = dayjs(subscription.renewalDate);
 
