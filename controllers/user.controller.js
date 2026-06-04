@@ -4,7 +4,7 @@ export const getUsers = async (req, res, next) => {
     try {
         const users = await User.find();
 
-        res.send(200).json({ success: true, data: users});
+        res.status(200).json({ success: true, data: users});
     } catch (error) {
         next(error);
     }
@@ -20,7 +20,7 @@ export const getUser = async (req, res, next) => {
             throw error;
         }
 
-        res.send(200).json({ success: true, data: users});
+        res.status(200).json({ success: true, data: users});
     } catch (error) {
         next(error);
     }
