@@ -7,6 +7,12 @@ if(!DB_URI) {
 
 const connectToDatabase = async () => {
     try {
+        // Check if already connected
+        if (mongoose.connection.readyState === 1) {
+            console.log('Already connected to database');
+            return;
+        }
+
         await mongoose.connect(DB_URI);
 
         console.log(`Connected to database in ${NODE_ENV} mode`);

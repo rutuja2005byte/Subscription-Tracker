@@ -3,31 +3,56 @@ import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const { serve } = require('@upstash/workflow/express');
 import Subscription from '../models/Subscription.model.js';
+import { sendReminderEmail } from '../utils/send-email.js';
+import { QSTASH_CURRENT_SIGNING_KEY, QSTASH_NEXT_SIGNING_KEY } from '../config/env.js';
+import connectToDatabase from '../database/mongodb.js';
 
 const REMINDERS = [7, 5, 2, 1];
 
-export const sendReminders = serve( async(context) => {
-    const { subscriptionId } = context.requestPayload;
-    const subscription = await fetchSubscription(context, subscriptionId);
+export const sendReminders = serve( 
+    async(context) => {
+        try {
+            // Ensure database connection
+            await connectToDatabase();
+            
+            const { subscriptionId } = context.requestPayload;
+            console.log('Workflow triggered for subscription:', subscriptionId);
+            
+            const subscription = await fetchSubscription(context, subscriptionId);
 
-    if(!subscription || subscription.status !== 'active') return;
+            if(!subscription || subscription.status !== 'active') {
+                console.log('Subscription not found or not active:', subscriptionId);
+                return;
+            }
 
-    const renewalDate = dayjs(subscription.renewalDate);
+            const renewalDate = dayjs(subscription.renewalDate);
 
-    if(renewalDate.isBefore(dayjs())) {
-        console.log(`Renewal data has passed for subscription ${subscriptionId}. Stopping workflow. `);
-        return;
-    }
+            if(renewalDate.isBefore(dayjs())) {
+                console.log(`Renewal date has passed for subscription ${subscriptionId}. Stopping workflow.`);
+                return;
+            }
 
-    for (const daysBefore of REMINDERS) {
+            for (const daysBefore of REMINDERS) {
+                const reminderDate = renewalDate.subtract(daysBefore, 'days');
 
-        if(reminderDate.isAfter(dayjs())) {
-            await sleepUntilReminder(context, `Reminder ${daysBefore} days before`, reminderDate);
+                if(reminderDate.isAfter(dayjs())) {
+                    await sleepUntilReminder(context, `Reminder ${daysBefore} days before`, reminderDate);
+                }
+
+                await triggerReminder(context, `${daysBefore} days before reminder`, subscription);
+            }
+        } catch (error) {
+            console.error('Error in workflow:', error);
+            throw error;
         }
-
-        await triggerReminder(context, `Reminder ${daysBefore} days before reminder`, subscription);
+    },
+    {
+        baseUrl: process.env.QSTASH_URL,
+        token: process.env.QSTASH_TOKEN,
+        currentSigningKey: QSTASH_CURRENT_SIGNING_KEY,
+        nextSigningKey: QSTASH_NEXT_SIGNING_KEY,
     }
-});
+);
 
 const fetchSubscription = async (context, subscriptionId) => {
     return await context.run('get subscription', () => {
